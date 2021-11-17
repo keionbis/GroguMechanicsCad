@@ -1,7 +1,7 @@
 <root>
 <mobilebase>
 	<cadEngine>
-		<git>https://github.com/Halloween2020TheChild/GroguMechanicsCad.git</git>
+		<git>https://github.com/keionbis/GroguMechanicsCad.git</git>
 		<file>cadGenHephaestusArm.groovy</file>
 	</cadEngine>
 	<driveEngine>

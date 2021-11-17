@@ -38,7 +38,7 @@ import eu.mihosoft.vrl.v3d.parametrics.LengthParameter
 import eu.mihosoft.vrl.v3d.Vector3d
 
 
-double grid =25
+double grid =36
 double cornerOffset=grid*1.75
 double boardx=8.5*25.4+cornerOffset
 double boardy=11.0*25.4+cornerOffset
@@ -64,8 +64,8 @@ return new ICadGenerator(){
 
     int bracketOneKeepawayDistance = 50
 
-	double motorGearPlateThickness = 10
-	double boardThickness =10
+	double motorGearPlateThickness = 0
+	double boardThickness = 10
 	
 	def thrustBearingSize = "Thrust_1andAHalfinch"
 	double radiusOfGraspingObject=12.5;
@@ -162,7 +162,7 @@ return new ICadGenerator(){
 		def insertMeasurments= Vitamins.getConfiguration(insert[0],
 			insert[1])
 		if(linkIndex==0)
-			shaftLocation.translateY(zOffset-topOfHornToBotomOfBaseLinkDistance)
+			shaftLocation.translateY(0)
 		else if(linkIndex==1) {
 			shaftLocation.translateZ(centerTheMotorsValue)
 			
@@ -486,7 +486,6 @@ return new ICadGenerator(){
 						.difference(
 							baseOfArm
 							.getBoundingBox()
-							.movez(z)
 							)
 						.union(supportBeam.union(springSupport).movez(z+movingPartClearence))
 						.transformed( TransformFactory.nrToCSG(locationOfBearing))
@@ -539,43 +538,7 @@ return new ICadGenerator(){
 			insert[1])
 		double xOffset = grid*7.5;
 		double yOffset = -grid*0.5;
-		def cameraHeight_parameterized
-		def cameraHeight_default = (25.4*9.67)
-		cameraHeight_parameterized = new LengthParameter("Camera Stand Height",cameraHeight_default,[cameraHeight_default+200,cameraHeight_default-200])
-		def cameraHeight = cameraHeight_parameterized.getMM();
-		def cameraNut = new TransformNR(xOffset+grid/2,yOffset+grid/2,0,new RotationNR(0,0,0))
-		
-		CSG cameraBoltHole = new Cylinder(2.5,cameraInsertLength+cameraHeight+2).toCSG()
-		CSG cameraCone =  new Cylinder(grid/2, // Radius at the bottom
-                      		insertMeasurments.diameter/2+2, // Radius at the top
-                      		cameraHeight, // Height
-                      		(int)8 //resolution
-                      		).toCSG()//convert to CSG to display 
-							 .transformed(TransformFactory.nrToCSG(cameraNut))
-		def mountLoacionsCamera = [
-			new TransformNR(xOffset,yOffset,0,new RotationNR(180,0,0)),
-			new TransformNR(xOffset,yOffset+grid,0,new RotationNR(180,0,0)),
-			new TransformNR(xOffset+grid,yOffset,0,new RotationNR(180,0,0)),
-			new TransformNR(xOffset+grid,yOffset+grid,0,new RotationNR(180,0,0))
-		]
-		def corners =[cameraCone.movez(1)]
-		for(TransformNR t:mountLoacionsCamera) {
-			def tr = TransformFactory.nrToCSG(t)
-			corners.add(cameraBuildingBlockRound.toZMax().transformed(tr).movez(1)
-				)
-				
-		}
-		vitaminLocations.put(cameraNut.copy().translateZ(cameraHeight-cameraInsertLength+1), [
-			insertCamera[0],
-			insertCamera[1]
-		])
-//		def cameraNutPart = Vitamins.get( insertCamera[0],insertCamera[1])
-//								.transformed(TransformFactory.nrToCSG(cameraNut))
-		def cameraBlock = CSG.unionAll(corners).hull()
-							.difference(cameraBoltHole.transformed(TransformFactory.nrToCSG(cameraNut)))
-							//.difference(cameraNutPart)
-		//allCad.add(cameraBlock)
-		//return allCad
+			
 		
 
 		for(DHParameterKinematics d:b.getAllDHChains()) {
@@ -626,23 +589,9 @@ return new ICadGenerator(){
 				conf.getShaftType(),
 				conf.getShaftSize()
 			])
-//			vitaminLocations.put(pinionRoot.copy().translateZ(3), [
-//				conf.getShaftType(),
-//				conf.getShaftSize()
-//			])
 		}
 		
-		double yOffsetFeducial = baseGrid*4
-		def mountLoacionsFeducials = [
-			new TransformNR(0,-yOffsetFeducial,0,new RotationNR(180,0,0)),// feducial
-			new TransformNR(0,yOffsetFeducial,0,new RotationNR(180,0,0)),// feducial
-			new TransformNR(baseGrid+yOffsetFeducial,yOffsetFeducial,0,new RotationNR(180,0,0)),// feducial
-			new TransformNR(yOffsetFeducial-baseGrid,0,0,new RotationNR(180,0,0)),// feducial
-			new TransformNR(baseGrid+yOffsetFeducial,-yOffsetFeducial,0,new RotationNR(180,0,0)),// feducial
-
-		]
-
-		
+				
 		def mountLoacions = [
 			new TransformNR(baseGrid,0,0,new RotationNR(180,0,0)),//base
 			new TransformNR(-baseGrid,baseGrid,0,new RotationNR(180,0,0)),//base
@@ -650,50 +599,18 @@ return new ICadGenerator(){
 			
 		]
 		mountLoacions.forEach{
-			vitaminLocations.put(it.copy().translateZ(-boardThickness),
+			vitaminLocations.put(it.copy().translateZ(-10),
 					["capScrew", boltsize])
 			vitaminLocations.put(it.copy().translateZ(insertMeasurments.installLength),
 					insert)
 
 		}
-		mountLoacionsFeducials.forEach{
-			vitaminLocations.put(it.copy().translateZ(-boardThickness),
-					["capScrew", boltsize])
-			vitaminLocations.put(it.copy().translateZ(insertMeasurments.installLength),
-					insert)
-
-		}
-		def mountLocationsCorners = [
-			//new TransformNR(-(boardx/2 - cornerRadius), -(boardy/2 - cornerRadius),0,new RotationNR(180,0,0)),// corner mount
-			//new TransformNR(-(boardx/2 - cornerRadius),  (boardy/2 - cornerRadius),0,new RotationNR(180,0,0)),// corner mount
-			//new TransformNR( (boardx/2 - cornerRadius), -(boardy/2 - cornerRadius),0,new RotationNR(180,0,0)),// corner mount
-			//new TransformNR( (boardx/2 - cornerRadius),  (boardy/2 - cornerRadius),0,new RotationNR(180,0,0))// corner mount
-			]
-		mountLocationsCorners.forEach{
-			vitaminLocations.put(it.copy().translateZ(-boardThickness),
-					["capScrew", boltsize])
-			vitaminLocations.put(it.copy().translateZ(insertMeasurments.installLength),
-					insert)
-
-		}
-		mountLoacionsCamera.forEach{
-			vitaminLocations.put(it.copy().translateZ(-boardThickness),
-					["capScrew", boltsize])
-			vitaminLocations.put(it.copy().translateZ(cameraInsertLength+1),
-					insert)
-
-		}
+	
+				
 		double totalMass = 0;
 		TransformNR centerOfMassFromCentroid=new TransformNR();
 		def vitamins=[]
-		mountLoacionsCamera.forEach{
-			vitamins.add(new Cylinder(5.75/2,cameraInsertLength)
-				.toCSG()
-				.toZMax()
-				.transformed(TransformFactory.nrToCSG(it))
-				)
-
-		}
+		
 		for(TransformNR tr: vitaminLocations.keySet()) {
 			def vitaminType = vitaminLocations.get(tr)[0]
 			def vitaminSize = vitaminLocations.get(tr)[1]
@@ -723,14 +640,6 @@ return new ICadGenerator(){
 			//do com calculation here for centerOfMassFromCentroid and totalMass
 		}
 		
-		cameraBlock=cameraBlock.difference(vitamins)
-		cameraBlock.setParameter(cameraHeight_parameterized)
-		cameraBlock.setColor(javafx.scene.paint.Color.BLUE)
-		cameraBlock.setName("CameraStandMount")
-		cameraBlock.setManufacturing ({ mfg ->
-			return mfg.toZMin()
-		})
-		cameraBlock.setManipulator(b.getRootListener())
 		
 		//Do additional CAD and add to the running CoM
 		def thrustMeasurments= Vitamins.getConfiguration("ballBearing",
@@ -753,6 +662,7 @@ return new ICadGenerator(){
 		def coreParts=[baseCore]
 		def boltHolePattern = []
 		def boltHoleKeepawayPattern = []
+		
 		def bolt = new Cylinder(2.6,20).toCSG()
 					.movez(-10)
 		def boltkeepaway = new Cylinder(5,20).toCSG()
@@ -796,6 +706,7 @@ return new ICadGenerator(){
 										.toZMin()
 										.movez(hornKeepawayLen)
 										.transformed(calibrationFrame)
+										.difference(new Cube(200, 200, 100).toCSG().toZMin().movez(-100))
 										.difference(ScriptingEngine.gitScriptRun(
 			"https://github.com/Halloween2020TheChild/GroguMechanicsCad.git", // git location of the library
 			"wrist3.groovy" , // file to load
@@ -811,18 +722,7 @@ return new ICadGenerator(){
 											.toCSG()
 											.roty(-90)
 									.transformed(calibrationFrame)
-		//coreParts.add(calibrationTipKeepaway)			
-		def cordCutter = new Cube(10,40,30).toCSG()
-							.toYMin()
-							.toZMax()
-							.movez(baseCoreheight-37)
-							.movez(topOfHornToBotomOfBaseLinkDistance+5)
-		//pcbScrewXSpacing
-		//pcbScrewYSpacing
-	    //pcbScrewMountHeight
-		
-
-		
+	
 							
 		def points = [	new Vector3d(10,0,0),
 					new Vector3d(0, 0, 5),
@@ -836,128 +736,28 @@ return new ICadGenerator(){
 				//.difference(vitamin_roundMotor_WPI_gb37y3530bracketOneKeepawayDistanceen)
 				.difference(vitamins)
 				//.difference(calibrationTipKeepaway)
-				.difference(cordCutter);
+				//.difference(cordCutter);
 				
 			
 
-		CSG boundingBase=Base.getBoundingBox()
-		Base = Base.intersect(boundingBase.toXMin().movex(-baseCorRad))	
-		Base = Base.intersect(boundingBase.toZMin())
-		Base = Base.union(pointer.movex(Base.getMaxX()-2))
-						.union(pointer.rotz(90).movey(-baseCorRad+2))
+		//CSG boundingBase=Base.getBoundingBox()
+		//Base = Base.intersect(boundingBase.toXMin().movex(-baseCorRad))	
+		//Base = Base.intersect(boundingBase.toZMin())
+		//Base = Base.union(pointer.movex(Base.getMaxX()-2))
+		//				.union(pointer.rotz(90).movey(-baseCorRad+2))
 
-		def pcbmount = ScriptingEngine.gitScriptRun(
-				"https://github.com/Hephaestus-Arm/HephaestusArm2.git", // git location of the library
-				"pcbmountpoints.groovy" , // file to load
-				// Parameters passed to the funcetion
-				[45.72, //Holes X Spacing
-					0, //Holes Y Spacing
-					5, //Pillar Dia
-					1.8, //Hole Dia
-					2, //Height
-				])
 		
-		def pcbmounttop = ScriptingEngine.gitScriptRun(
-			"https://github.com/Hephaestus-Arm/HephaestusArm2.git", // git location of the library
-			"pcbmountpoints.groovy" , // file to load
-			// Parameters passed to the funcetion
-			[0, //Holes X Spacing
-				0, //Holes Y Spacing
-				5, //Pillar Dia
-				1.8, //Hole Dia
-				2, //Height
-			])
 		double extra = Math.abs(Base.getMinX())
-		pcbmount = pcbmount.union(pcbmounttop.movey(40)).rotz(90).roty(90).movex(Base.getMinX())
-		pcbmount = pcbmount.movez(-pcbmount.getMinZ()+2)
-
-
-		Base.setColor(javafx.scene.paint.Color.PINK)
-		// add it to the return list
-		Base.setManipulator(b.getRootListener())
-		for(def c:vitamins) {
-			c.setManufacturing ({ mfg ->
-			return null;
-		})
-		}
-
-
-		Base = Base.union(pcbmount)
-
-
-		def paper = new Cube(8.5*25.4,11.0*25.4,1).toCSG()
-						.toZMax()
-						.toXMin()
-						.movez(1)
-						.movex(-extra)
-						.difference(boltHolePattern)
+		
 
 		
-		allCad.add(cameraBlock)
-
-		// Cyl for radius
-		def cornerCyl = new Cylinder(cornerRadius,cornerRadius,boardThickness,80).toCSG();
-
 		
-		// Make 4 copies and hull them.
-		def board = CSG.hullAll([
-			cornerCyl.movex(-(boardx/2 - cornerRadius)).movey(-(boardy/2 - cornerRadius)),
-			cornerCyl.movex(-(boardx/2 - cornerRadius)).movey((boardy/2 - cornerRadius)),
-			cornerCyl.movex((boardx/2 - cornerRadius)).movey(-(boardy/2 - cornerRadius)),
-			cornerCyl.movex((boardx/2 - cornerRadius)).movey((boardy/2 - cornerRadius))			
-			])
-		
+	
 		// hacky non vitamin hole solution
 		
-		def holeCyl = new Cylinder(5,5,boardThickness+1,80).toCSG().movez(-0.5)
-		double holenudge = 10
-		def hackyholes = CSG.unionAll([
-			holeCyl.movex(-(boardx/2 - cornerRadius - holenudge)).movey(-(boardy/2 - cornerRadius - holenudge)),
-			holeCyl.movex(-(boardx/2 - cornerRadius - holenudge)).movey((boardy/2 - cornerRadius - holenudge)),
-			holeCyl.movex((boardx/2 - cornerRadius - holenudge)).movey(-(boardy/2 - cornerRadius - holenudge)),
-			holeCyl.movex((boardx/2 - cornerRadius - holenudge)).movey((boardy/2 - cornerRadius - holenudge))
-			])
-		board = board.difference(hackyholes)
-
-		board = board.movex(cornerNudge).movey(cornerNudge)
-		
-		board = board.toZMax()
-						.toXMin()
-						.movex(-extra)
-						.movey(cornerOffset/2)
-						//.difference(boltHolePattern)
-						.difference(vitamins)
-		
-
-						
-		
-		board.setColor(javafx.scene.paint.Color.WHITESMOKE)
-		def cardboard = new Cube(boardx,boardy,2).toCSG()
-		.toZMax()
-		.toXMin()
-		.movex(-extra)
-		.movey(cornerOffset/2)
-		.movez(-boardThickness)
-		.difference(boltHoleKeepawayPattern)
-		.difference(vitamins)
-
-		cardboard.setColor(javafx.scene.paint.Color.SADDLEBROWN)
-		
-		cardboard.addExportFormat("svg")
-		board.addExportFormat("svg")
-		paper.addExportFormat("svg")
-		paper.setManufacturing ({ mfg ->
-			return mfg.toZMin()
-		})
-		board.setManufacturing ({ mfg ->
-			return mfg.toZMin()
-		})
-		cardboard.setManufacturing ({ mfg ->
-			return mfg.toZMin()
-		})
-		paper.setColor(javafx.scene.paint.Color.WHITE)
-		
-		allCad.addAll(Base,paper,board)//cardboard,board,paper
+							
+	
+		allCad.addAll(Base)//cardboard,board,paper
 		Base.addExportFormat("stl")
 		Base.addExportFormat("svg")
 		Base.setName("BaseMount")
