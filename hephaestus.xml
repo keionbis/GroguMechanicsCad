@@ -14,7 +14,7 @@
 
 <name>Standard6dofArm1</name>
 	<cadEngine>
-		<git>https://github.com/Halloween2020TheChild/GroguMechanicsCad.git</git>
+		<git>https://github.com/keionbis/GroguMechanicsCad.git</git>
 		<file>cadGenHephaestusArm.groovy</file>
 	</cadEngine>
 	<kinematics>
